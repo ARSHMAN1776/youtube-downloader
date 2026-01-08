@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Downloading...</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white flex flex-col items-center justify-center min-h-screen">
+  <div class="animate-spin rounded-full h-24 w-24 border-t-4 border-blue-500 mb-6"></div>
+  <p class="text-lg font-semibold text-gray-700">Your download is in progress...</p>
+
+  <iframe id="downloader" style="display: none;"></iframe>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const url = urlParams.get('url');
+    const format = urlParams.get('format');
+    const downloadUrl = `http://127.0.0.1:5000/download?url=${url}&format=${format}`;
+
+    // Trigger download in hidden iframe
+    document.getElementById('downloader').src = downloadUrl;
+
+    // After some time, close loading page
+    setTimeout(() => {
+      window.opener.location.reload();  // refresh main
+      window.close();                   // close loading
+    }, 15000);  // adjust this delay if needed
+  </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YouTube Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+    <h1 class="text-2xl font-bold mb-4 text-center">YouTube Downloader</h1>
+    <input id="url" type="text" placeholder="Paste YouTube URL here" class="w-full p-3 border border-gray-300 rounded mb-4" />
+    <div class="mb-4">
+      <label><input type="radio" name="format" value="video" checked> Video</label>
+      <label class="ml-4"><input type="radio" name="format" value="audio"> Audio</label>
+    </div>
+    <button onclick="fetchVideoInfo()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Get Video Info</button>
+    <div id="video-info" class="mt-4 hidden">
+      <p><strong>Title:</strong> <span id="video-title"></span></p>
+      <p><strong>Author:</strong> <span id="video-author"></span></p>
+      <button onclick="startDownload()" class="mt-4 w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Download</button>
+    </div>
+    <p id="message" class="text-red-600 mt-4"></p>
+  </div>
+
+  <script>
+    let videoInfo = null;
+
+    async function fetchVideoInfo() {
+      const url = document.getElementById('url').value.trim();
+      const msg = document.getElementById('message');
+      msg.textContent = '';
+      document.getElementById('video-info').classList.add('hidden');
+
+      if (!url) {
+        msg.textContent = 'Please enter a URL.';
+        return;
+      }
+
+      try {
+        const res = await fetch('/info', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          msg.textContent = "Server returned invalid response. Try another link.";
+          return;
+        }
+
+        if (!res.ok) {
+          msg.textContent = "Error: " + (data?.error || "Unknown error");
+          return;
+        }
+
+        videoInfo = data;
+        document.getElementById('video-title').textContent = videoInfo.title || 'Unknown Title';
+        document.getElementById('video-author').textContent = videoInfo.uploader || 'Unknown Author';
+        document.getElementById('video-info').classList.remove('hidden');
+      } catch (e) {
+        msg.textContent = 'Network error: ' + e.message;
+      }
+    }
+
+    function startDownload() {
+      const rawUrl = document.getElementById('url').value.trim();
+      if (!rawUrl) {
+        alert("Please enter a URL.");
+        return;
+      }
+      const url = encodeURIComponent(rawUrl);
+      const format = document.querySelector('input[name="format"]:checked').value;
+      const win = window.open(`loading.html?url=${url}&format=${format}`, '_blank');
+      if (!win) alert('Popup blocked! Please allow popups.');
+    }
+  </script>
+</body>
+</html>
